@@ -15,7 +15,7 @@ function SortablePage({ page, index, onDelete }: { page: Page; index: number; on
     <div ref={setNodeRef} style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.4 : 1 }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6, cursor: 'grab' }} {...attributes} {...listeners}>
         <div style={{ position: 'relative', background: 'var(--bg4,#0d1b3e)', borderRadius: 'var(--rs)', overflow: 'hidden', border: '2px solid var(--border)', aspectRatio: '16/10' }}>
-          <img src={`file://${page.imagePath}`} alt={`Page ${index+1}`} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', pointerEvents: 'none' }} />
+          <img src={`file://${page.imagePath}`} alt={`Page ${index+1}`} loading="lazy" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', pointerEvents: 'none' }} />
           <div style={{ position: 'absolute', top: 4, left: 4, background: 'rgba(0,0,0,.5)', color: '#ccc', fontSize: 10, padding: '2px 4px', borderRadius: 3 }}>⠿</div>
           <div style={{ position: 'absolute', bottom: 4, right: 4, background: 'rgba(0,0,0,.7)', color: '#fff', fontSize: 10, padding: '2px 5px', borderRadius: 3, fontWeight: 600 }}>{index+1}</div>
         </div>

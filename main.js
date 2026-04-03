@@ -303,6 +303,71 @@ function setupIPC() {
   })
 
   ipcMain.handle('open-file', (_e, filePath) => shell.openPath(filePath))
+
+  ipcMain.handle('export-book-pdf', async (_e, bookId) => {
+    const book = appData.books[bookId]
+    if (!book || book.pages.length === 0) return { error: 'No pages to export' }
+
+    const result = await dialog.showSaveDialog({
+      defaultPath: `${book.name}.pdf`,
+      filters: [{ name: 'PDF', extensions: ['pdf'] }],
+    })
+    if (result.canceled || !result.filePath) return { canceled: true }
+
+    try {
+      const { PDFDocument } = require('pdf-lib')
+      const pdf = await PDFDocument.create()
+      const sorted = [...book.pages].sort((a, b) => a.order - b.order)
+
+      for (const page of sorted) {
+        try {
+          const imgBuf = fs.readFileSync(page.imagePath)
+          const img = await pdf.embedPng(imgBuf)
+          const { width, height } = img.scale(1)
+          const p = pdf.addPage([width, height])
+          p.drawImage(img, { x: 0, y: 0, width, height })
+        } catch (pageErr) {
+          console.error(`[Books] Skipping page ${page.id}:`, pageErr.message)
+        }
+      }
+
+      const pdfBytes = await pdf.save()
+      fs.writeFileSync(result.filePath, Buffer.from(pdfBytes))
+      shell.openPath(result.filePath)
+      return { filePath: result.filePath, pageCount: sorted.length }
+    } catch (err) {
+      console.error('[Books] PDF export error:', err)
+      return { error: err.message }
+    }
+  })
+
+  ipcMain.handle('import-images', async (_e, bookId, filePaths) => {
+    const book = appData.books[bookId]
+    if (!book) return []
+
+    const dir = IMAGES_DIR()
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true })
+    const { v4: uuidv4 } = require('uuid')
+    const added = []
+
+    for (const src of filePaths) {
+      try {
+        const ext = path.extname(src).toLowerCase()
+        if (!['.png', '.jpg', '.jpeg', '.webp', '.bmp', '.gif'].includes(ext)) continue
+        const fname = `${uuidv4()}${ext}`
+        const dest = path.join(dir, fname)
+        fs.copyFileSync(src, dest)
+        const page = { id: uuidv4(), imagePath: dest, capturedAt: new Date().toISOString(), order: book.pages.length }
+        book.pages.push(page)
+        added.push(page)
+      } catch (err) {
+        console.error(`[Books] Failed to import ${src}:`, err.message)
+      }
+    }
+
+    if (added.length > 0) saveData()
+    return added
+  })
 }
 
 // ─── App lifecycle ────────────────────────────────────────────────────────────

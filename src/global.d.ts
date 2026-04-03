@@ -16,6 +16,8 @@ export interface BooksAPI {
   writeFile: (filePath: string, base64: string) => Promise<void>
   readImageBase64: (imgPath: string) => Promise<string | null>
   openFile: (filePath: string) => Promise<void>
+  exportBookPdf: (bookId: string) => Promise<{ canceled?: boolean; error?: string; filePath?: string; pageCount?: number }>
+  importImages: (bookId: string, filePaths: string[]) => Promise<Page[]>
   onPageAdded: (cb: (bookId: string, page: Page) => void) => () => void
   onActiveBookChanged: (cb: (bookId: string) => void) => () => void
   onNoActiveBook: (cb: () => void) => () => void

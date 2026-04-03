@@ -19,6 +19,8 @@ contextBridge.exposeInMainWorld('booksAPI', {
   writeFile: (filePath, base64) => ipcRenderer.invoke('write-file', filePath, base64),
   readImageBase64: (imgPath) => ipcRenderer.invoke('read-image-base64', imgPath),
   openFile: (filePath) => ipcRenderer.invoke('open-file', filePath),
+  exportBookPdf: (bookId) => ipcRenderer.invoke('export-book-pdf', bookId),
+  importImages: (bookId, filePaths) => ipcRenderer.invoke('import-images', bookId, filePaths),
 
   // Events from main process
   onPageAdded: (cb) => {
